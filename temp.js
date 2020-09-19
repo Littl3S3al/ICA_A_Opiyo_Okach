@@ -1,204 +1,162 @@
 import * as THREE from '../build/three.module.js';
 
+			import Stats from './jsm/libs/stats.module.js';
 			import { GUI } from './jsm/libs/dat.gui.module.js';
 
-			import { FirstPersonControls } from './jsm/controls/FirstPersonControls.js';
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
 
-			var camera, controls, scene, renderer, light;
+			var group;
+			var container, stats;
+			var particlesData = [];
+			var camera, scene, renderer;
+			var positions, colors;
+			var particles;
+			var pointCloud;
+			var particlePositions;
+			var linesMesh;
 
-			var material1, material2, material3;
+			var maxParticleCount = 1000;
+			var particleCount = 500;
+			var r = 800;
+			var rHalf = r / 2;
 
-			var analyser1, analyser2, analyser3;
+			var effectController = {
+				showDots: true,
+				showLines: true,
+				minDistance: 150,
+				limitConnections: false,
+				maxConnections: 20,
+				particleCount: 500
+			};
 
-			var clock = new THREE.Clock();
+			init();
+			animate();
 
-			var startButton = document.getElementById( 'startButton' );
-			startButton.addEventListener( 'click', init );
+			function initGUI() {
+
+				var gui = new GUI();
+
+				gui.add( effectController, "showDots" ).onChange( function ( value ) {
+
+					pointCloud.visible = value;
+
+				} );
+				gui.add( effectController, "showLines" ).onChange( function ( value ) {
+
+					linesMesh.visible = value;
+
+				} );
+				gui.add( effectController, "minDistance", 10, 300 );
+				gui.add( effectController, "limitConnections" );
+				gui.add( effectController, "maxConnections", 0, 30, 1 );
+				gui.add( effectController, "particleCount", 0, maxParticleCount, 1 ).onChange( function ( value ) {
+
+					particleCount = parseInt( value );
+					particles.setDrawRange( 0, particleCount );
+
+				} );
+
+			}
 
 			function init() {
 
-				var overlay = document.getElementById( 'overlay' );
-				overlay.remove();
+				initGUI();
 
-				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.set( 0, 25, 0 );
+				container = document.getElementById( 'container' );
 
-				var listener = new THREE.AudioListener();
-				camera.add( listener );
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 4000 );
+				camera.position.z = 1750;
+
+				var controls = new OrbitControls( camera, container );
+				controls.minDistance = 1000;
+				controls.maxDistance = 3000;
 
 				scene = new THREE.Scene();
-				scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 
-				light = new THREE.DirectionalLight( 0xffffff );
-				light.position.set( 0, 0.5, 1 ).normalize();
-				scene.add( light );
 
-				var sphere = new THREE.SphereBufferGeometry( 20, 32, 16 );
+				group = new THREE.Group();
+				scene.add( group );
 
-				material1 = new THREE.MeshPhongMaterial( { color: 0xffaa00, flatShading: true, shininess: 0 } );
-				material2 = new THREE.MeshPhongMaterial( { color: 0xff2200, flatShading: true, shininess: 0 } );
-				material3 = new THREE.MeshPhongMaterial( { color: 0x6622aa, flatShading: true, shininess: 0 } );
+				var helper = new THREE.BoxHelper( new THREE.Mesh( new THREE.BoxBufferGeometry( r, r, r ) ) );
+				helper.material.color.setHex( 0x101010 );
+				helper.material.blending = THREE.AdditiveBlending;
+				helper.material.transparent = true;
+				group.add( helper );
 
-				// sound spheres
+				var segments = maxParticleCount * maxParticleCount;
 
-				var audioLoader = new THREE.AudioLoader();
+				positions = new Float32Array( segments * 3 );
+				colors = new Float32Array( segments * 3 );
 
-				var mesh1 = new THREE.Mesh( sphere, material1 );
-				mesh1.position.set( - 250, 30, 0 );
-				scene.add( mesh1 );
-
-				var sound1 = new THREE.PositionalAudio( listener );
-				audioLoader.load( 'sounds/358232_j_s_song.ogg', function ( buffer ) {
-
-					sound1.setBuffer( buffer );
-					sound1.setRefDistance( 20 );
-					sound1.play();
-
-				} );
-				mesh1.add( sound1 );
-
-				//
-
-				var mesh2 = new THREE.Mesh( sphere, material2 );
-				mesh2.position.set( 250, 30, 0 );
-				scene.add( mesh2 );
-
-				var sound2 = new THREE.PositionalAudio( listener );
-				audioLoader.load( 'sounds/376737_Skullbeatz___Bad_Cat_Maste.ogg', function ( buffer ) {
-
-					sound2.setBuffer( buffer );
-					sound2.setRefDistance( 20 );
-					sound2.play();
-
-				} );
-				mesh2.add( sound2 );
-
-				//
-
-				var mesh3 = new THREE.Mesh( sphere, material3 );
-				mesh3.position.set( 0, 30, - 250 );
-				scene.add( mesh3 );
-
-				var sound3 = new THREE.PositionalAudio( listener );
-				var oscillator = listener.context.createOscillator();
-				oscillator.type = 'sine';
-				oscillator.frequency.setValueAtTime( 144, sound3.context.currentTime );
-				oscillator.start( 0 );
-				sound3.setNodeSource( oscillator );
-				sound3.setRefDistance( 20 );
-				sound3.setVolume( 0.5 );
-				mesh3.add( sound3 );
-
-				// analysers
-
-				analyser1 = new THREE.AudioAnalyser( sound1, 32 );
-				analyser2 = new THREE.AudioAnalyser( sound2, 32 );
-				analyser3 = new THREE.AudioAnalyser( sound3, 32 );
-
-				// global ambient audio
-
-				var sound4 = new THREE.Audio( listener );
-				audioLoader.load( 'sounds/Project_Utopia.ogg', function ( buffer ) {
-
-					sound4.setBuffer( buffer );
-					sound4.setLoop( true );
-					sound4.setVolume( 0.5 );
-					sound4.play();
-
+				var pMaterial = new THREE.PointsMaterial( {
+					color: 0xFFFFFF,
+					size: 3,
+					blending: THREE.AdditiveBlending,
+					transparent: true,
+					sizeAttenuation: false
 				} );
 
-				// ground
+				particles = new THREE.BufferGeometry();
+				particlePositions = new Float32Array( maxParticleCount * 3 );
 
-				var helper = new THREE.GridHelper( 1000, 10, 0x444444, 0x444444 );
-				helper.position.y = 0.1;
-				scene.add( helper );
+				for ( var i = 0; i < maxParticleCount; i ++ ) {
 
-				//
+					var x = Math.random() * r - r / 2;
+					var y = Math.random() * r - r / 2;
+					var z = Math.random() * r - r / 2;
 
-				var SoundControls = function () {
+					particlePositions[ i * 3 ] = x;
+					particlePositions[ i * 3 + 1 ] = y;
+					particlePositions[ i * 3 + 2 ] = z;
 
-					this.master = listener.getMasterVolume();
-					this.firstSphere = sound1.getVolume();
-					this.secondSphere = sound2.getVolume();
-					this.thirdSphere = sound3.getVolume();
-					this.Ambient = sound4.getVolume();
+					// add it to the geometry
+					particlesData.push( {
+						velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 2, - 1 + Math.random() * 2 ),
+						numConnections: 0
+					} );
 
-				};
+				}
 
-				var GeneratorControls = function () {
+				particles.setDrawRange( 0, particleCount );
+				particles.setAttribute( 'position', new THREE.BufferAttribute( particlePositions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
 
-					this.frequency = oscillator.frequency.value;
-					this.wavetype = oscillator.type;
+				// create the particle system
+				pointCloud = new THREE.Points( particles, pMaterial );
+				group.add( pointCloud );
 
-				};
+				var geometry = new THREE.BufferGeometry();
 
-				var gui = new GUI();
-				var soundControls = new SoundControls();
-				var generatorControls = new GeneratorControls();
-				var volumeFolder = gui.addFolder( 'sound volume' );
-				var generatorFolder = gui.addFolder( 'sound generator' );
+				geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+				geometry.setAttribute( 'color', new THREE.BufferAttribute( colors, 3 ).setUsage( THREE.DynamicDrawUsage ) );
 
-				volumeFolder.add( soundControls, 'master' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
+				geometry.computeBoundingSphere();
 
-					listener.setMasterVolume( soundControls.master );
+				geometry.setDrawRange( 0, 0 );
 
-				} );
-				volumeFolder.add( soundControls, 'firstSphere' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
-
-					sound1.setVolume( soundControls.firstSphere );
-
-				} );
-				volumeFolder.add( soundControls, 'secondSphere' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
-
-					sound2.setVolume( soundControls.secondSphere );
-
+				var material = new THREE.LineBasicMaterial( {
+					vertexColors: true,
+					blending: THREE.AdditiveBlending,
+					transparent: true
 				} );
 
-				volumeFolder.add( soundControls, 'thirdSphere' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
-
-					sound3.setVolume( soundControls.thirdSphere );
-
-				} );
-				volumeFolder.add( soundControls, 'Ambient' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
-
-					sound4.setVolume( soundControls.Ambient );
-
-				} );
-				volumeFolder.open();
-				generatorFolder.add( generatorControls, 'frequency' ).min( 50.0 ).max( 5000.0 ).step( 1.0 ).onChange( function () {
-
-					oscillator.frequency.setValueAtTime( generatorControls.frequency, listener.context.currentTime );
-
-				} );
-				generatorFolder.add( generatorControls, 'wavetype', [ 'sine', 'square', 'sawtooth', 'triangle' ] ).onChange( function () {
-
-					oscillator.type = generatorControls.wavetype;
-
-				} );
-
-				generatorFolder.open();
+				linesMesh = new THREE.LineSegments( geometry, material );
+				group.add( linesMesh );
 
 				//
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				document.body.appendChild( renderer.domElement );
+				renderer.outputEncoding = THREE.sRGBEncoding;
+
+				container.appendChild( renderer.domElement );
 
 				//
 
-				controls = new FirstPersonControls( camera, renderer.domElement );
-
-				controls.movementSpeed = 70;
-				controls.lookSpeed = 0.05;
-				controls.noFly = true;
-				controls.lookVertical = false;
-
-				//
+				stats = new Stats();
+				container.appendChild( stats.dom );
 
 				window.addEventListener( 'resize', onWindowResize, false );
-
-				animate();
 
 			}
 
@@ -209,28 +167,100 @@ import * as THREE from '../build/three.module.js';
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
-				controls.handleResize();
-
 			}
 
 			function animate() {
 
+				var vertexpos = 0;
+				var colorpos = 0;
+				var numConnected = 0;
+
+				for ( var i = 0; i < particleCount; i ++ )
+					particlesData[ i ].numConnections = 0;
+
+				for ( var i = 0; i < particleCount; i ++ ) {
+
+					// get the particle
+					var particleData = particlesData[ i ];
+
+					particlePositions[ i * 3 ] += particleData.velocity.x;
+					particlePositions[ i * 3 + 1 ] += particleData.velocity.y;
+					particlePositions[ i * 3 + 2 ] += particleData.velocity.z;
+
+					if ( particlePositions[ i * 3 + 1 ] < - rHalf || particlePositions[ i * 3 + 1 ] > rHalf )
+						particleData.velocity.y = - particleData.velocity.y;
+
+					if ( particlePositions[ i * 3 ] < - rHalf || particlePositions[ i * 3 ] > rHalf )
+						particleData.velocity.x = - particleData.velocity.x;
+
+					if ( particlePositions[ i * 3 + 2 ] < - rHalf || particlePositions[ i * 3 + 2 ] > rHalf )
+						particleData.velocity.z = - particleData.velocity.z;
+
+					if ( effectController.limitConnections && particleData.numConnections >= effectController.maxConnections )
+						continue;
+
+					// Check collision
+					for ( var j = i + 1; j < particleCount; j ++ ) {
+
+						var particleDataB = particlesData[ j ];
+						if ( effectController.limitConnections && particleDataB.numConnections >= effectController.maxConnections )
+							continue;
+
+						var dx = particlePositions[ i * 3 ] - particlePositions[ j * 3 ];
+						var dy = particlePositions[ i * 3 + 1 ] - particlePositions[ j * 3 + 1 ];
+						var dz = particlePositions[ i * 3 + 2 ] - particlePositions[ j * 3 + 2 ];
+						var dist = Math.sqrt( dx * dx + dy * dy + dz * dz );
+
+						if ( dist < effectController.minDistance ) {
+
+							particleData.numConnections ++;
+							particleDataB.numConnections ++;
+
+							var alpha = 1.0 - dist / effectController.minDistance;
+
+							positions[ vertexpos ++ ] = particlePositions[ i * 3 ];
+							positions[ vertexpos ++ ] = particlePositions[ i * 3 + 1 ];
+							positions[ vertexpos ++ ] = particlePositions[ i * 3 + 2 ];
+
+							positions[ vertexpos ++ ] = particlePositions[ j * 3 ];
+							positions[ vertexpos ++ ] = particlePositions[ j * 3 + 1 ];
+							positions[ vertexpos ++ ] = particlePositions[ j * 3 + 2 ];
+
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+
+							numConnected ++;
+
+						}
+
+					}
+
+				}
+
+
+				linesMesh.geometry.setDrawRange( 0, numConnected * 2 );
+				linesMesh.geometry.attributes.position.needsUpdate = true;
+				linesMesh.geometry.attributes.color.needsUpdate = true;
+
+				pointCloud.geometry.attributes.position.needsUpdate = true;
+
 				requestAnimationFrame( animate );
+
+				stats.update();
 				render();
 
 			}
 
-
 			function render() {
 
-				var delta = clock.getDelta();
+				var time = Date.now() * 0.001;
 
-				controls.update( delta );
-
-				material1.emissive.b = analyser1.getAverageFrequency() / 256;
-				material2.emissive.b = analyser2.getAverageFrequency() / 256;
-				material3.emissive.b = analyser3.getAverageFrequency() / 256;
-
+				group.rotation.y = time * 0.1;
 				renderer.render( scene, camera );
 
 			}

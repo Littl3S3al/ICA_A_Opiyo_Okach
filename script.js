@@ -1,35 +1,71 @@
 import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/build/three.module.js';
+import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
+import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
+        
 
-			import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
+let camera, controls, scene, renderer, light;
 
-			import { FirstPersonControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/FirstPersonControls.js';
+// sound variables
+var material1, material2, material3;
+let analyser1, analyser2, analyser3;
 
-			var camera, controls, scene, renderer, light;
+// buffer geometry variables
+let group;
+let particlesData = [];
+let positions, colors;
+let particles;
+let pointCloud;
+let particlePositions;
+let linesMesh;
 
-			var material1, material2, material3;
+const maxParticleCount = 100;
+const particleCount = 50;
+const r = 200;
+const rHalf = r / 2;
 
-			var analyser1, analyser2, analyser3;
+let effectController = {
+	showDots: true,
+	showLines: true,
+	minDistance: 150,
+	limitConnections: false,
+	maxConnections: 20,
+	particleCount: 500
+};
 
-			var clock = new THREE.Clock();
+var particle1 = {};
 
-			var startButton = document.getElementById( 'startButton' );
-			startButton.addEventListener( 'click', init );
+// timer
+let clock = new THREE.Clock();
 
+// DOM start button
+let startButton = document.getElementById( 'startButton' );
+startButton.addEventListener( 'click', () => {
+	init(); bufferGeo();
+} );
+            
+
+
+            // function to add all sound elements
 			function init() {
 
+                // remove start button
                 console.log('init');
 				var overlay = document.getElementById( 'overlay' );
 				overlay.remove();
 
+        // bring in camera
 				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.set( 0, 25, 0 );
+				camera.position.set( 0, 25, 200 );
 
+                // bring in audio listener
 				var listener = new THREE.AudioListener();
 				camera.add( listener );
 
+        // scene
 				scene = new THREE.Scene();
 				scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 
+        // light
 				light = new THREE.DirectionalLight( 0xffffff );
 				light.position.set( 0, 0.5, 1 ).normalize();
 				scene.add( light );
@@ -49,8 +85,9 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 				scene.add( mesh1 );
 
 				var sound1 = new THREE.PositionalAudio( listener );
-				audioLoader.load( 'sounds/358232_j_s_song.ogg', function ( buffer ) {
+				audioLoader.load( 'assets/bensound-anewbeginning.ogg', function ( buffer ) {
 
+                    sound1.setLoop()
 					sound1.setBuffer( buffer );
 					sound1.setRefDistance( 20 );
 					sound1.play();
@@ -65,8 +102,9 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 				scene.add( mesh2 );
 
 				var sound2 = new THREE.PositionalAudio( listener );
-				audioLoader.load( 'sounds/376737_Skullbeatz___Bad_Cat_Maste.ogg', function ( buffer ) {
+				audioLoader.load( 'assets/bensound-creativeminds.ogg', function ( buffer ) {
 
+                    sound2.setLoop()
 					sound2.setBuffer( buffer );
 					sound2.setRefDistance( 20 );
 					sound2.play();
@@ -77,17 +115,18 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 				//
 
 				var mesh3 = new THREE.Mesh( sphere, material3 );
-				mesh3.position.set( 0, 30, - 250 );
-				scene.add( mesh3 );
+                mesh3.position.set(  0, 30, - 250 );
+                scene.add( mesh3 );
 
 				var sound3 = new THREE.PositionalAudio( listener );
-				var oscillator = listener.context.createOscillator();
-				oscillator.type = 'sine';
-				oscillator.frequency.setValueAtTime( 144, sound3.context.currentTime );
-				oscillator.start( 0 );
-				sound3.setNodeSource( oscillator );
-				sound3.setRefDistance( 20 );
-				sound3.setVolume( 0.5 );
+				audioLoader.load( 'assets/bensound-ukulele.ogg', function ( buffer ) {
+
+                    sound3.setLoop();
+					sound3.setBuffer( buffer );
+					sound3.setRefDistance( 20 );
+					sound3.play();
+
+				} );
 				mesh3.add( sound3 );
 
 				// analysers
@@ -96,25 +135,6 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 				analyser2 = new THREE.AudioAnalyser( sound2, 32 );
 				analyser3 = new THREE.AudioAnalyser( sound3, 32 );
 
-				// global ambient audio
-
-				var sound4 = new THREE.Audio( listener );
-				audioLoader.load( 'sounds/Project_Utopia.ogg', function ( buffer ) {
-
-					sound4.setBuffer( buffer );
-					sound4.setLoop( true );
-					sound4.setVolume( 0.5 );
-					sound4.play();
-
-				} );
-
-				// ground
-
-				var helper = new THREE.GridHelper( 1000, 10, 0x444444, 0x444444 );
-				helper.position.y = 0.1;
-				scene.add( helper );
-
-				//
 
 				var SoundControls = function () {
 
@@ -122,22 +142,12 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 					this.firstSphere = sound1.getVolume();
 					this.secondSphere = sound2.getVolume();
 					this.thirdSphere = sound3.getVolume();
-					this.Ambient = sound4.getVolume();
-
-				};
-
-				var GeneratorControls = function () {
-
-					this.frequency = oscillator.frequency.value;
-					this.wavetype = oscillator.type;
 
 				};
 
 				var gui = new GUI();
 				var soundControls = new SoundControls();
-				var generatorControls = new GeneratorControls();
 				var volumeFolder = gui.addFolder( 'sound volume' );
-				var generatorFolder = gui.addFolder( 'sound generator' );
 
 				volumeFolder.add( soundControls, 'master' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
 
@@ -160,49 +170,196 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 					sound3.setVolume( soundControls.thirdSphere );
 
 				} );
-				volumeFolder.add( soundControls, 'Ambient' ).min( 0.0 ).max( 1.0 ).step( 0.01 ).onChange( function () {
-
-					sound4.setVolume( soundControls.Ambient );
-
-				} );
 				volumeFolder.open();
-				generatorFolder.add( generatorControls, 'frequency' ).min( 50.0 ).max( 5000.0 ).step( 1.0 ).onChange( function () {
-
-					oscillator.frequency.setValueAtTime( generatorControls.frequency, listener.context.currentTime );
-
-				} );
-				generatorFolder.add( generatorControls, 'wavetype', [ 'sine', 'square', 'sawtooth', 'triangle' ] ).onChange( function () {
-
-					oscillator.type = generatorControls.wavetype;
-
-				} );
-
-				generatorFolder.open();
 
 				//
 
+        // create canvas
+                const container = document.querySelector('.container');
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				document.body.appendChild( renderer.domElement );
+				container.appendChild( renderer.domElement );
 
 				//
 
-				controls = new FirstPersonControls( camera, renderer.domElement );
-
-				controls.movementSpeed = 70;
-				controls.lookSpeed = 0.05;
-				controls.noFly = true;
-				controls.lookVertical = false;
+            // add controls
+				controls = new OrbitControls( camera, renderer.domElement );
+                controls.target.set(0, 5, 0);
 
 				//
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
+			}
+
+            function bufferGeo() {
+
+				group = new THREE.Group();
+				scene.add( group );
+
+				var segments = maxParticleCount * maxParticleCount;
+
+				positions = new Float32Array( segments * 3 );
+				colors = new Float32Array( segments * 3 );
+
+				var pMaterial = new THREE.PointsMaterial( {
+					color: 0xFFFFFF,
+					size: 5,
+					blending: THREE.AdditiveBlending,
+					transparent: true,
+					sizeAttenuation: false
+				} );
+
+				particles = new THREE.BufferGeometry();
+				particlePositions = new Float32Array( maxParticleCount * 3 );
+
+				for ( var i = 0; i < maxParticleCount; i ++ ) {
+
+					var x = Math.random() * r - r / 2;
+					var y = Math.random() * r - r / 2;
+					var z = Math.random() * r - r / 2;
+
+					particlePositions[ i * 3 ] = x;
+					particlePositions[ i * 3 + 1 ] = y;
+					particlePositions[ i * 3 + 2 ] = z;
+
+					// add it to the geometry
+					particlesData.push( {
+						velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 2, - 1 + Math.random() * 2 ),
+						numConnections: 0
+					} );
+
+				}
+
+				particles.setDrawRange( 0, particleCount );
+				particles.setAttribute( 'position', new THREE.BufferAttribute( particlePositions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+
+				// create the particle system
+				pointCloud = new THREE.Points( particles, pMaterial );
+				group.add( pointCloud );
+
+				var geometry = new THREE.BufferGeometry();
+
+				geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+				geometry.setAttribute( 'color', new THREE.BufferAttribute( colors, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+
+				geometry.computeBoundingSphere();
+
+				geometry.setDrawRange( 0, 0 );
+
+				var material = new THREE.LineBasicMaterial( {
+					vertexColors: true,
+					blending: THREE.AdditiveBlending,
+					transparent: true
+				} );
+
+				linesMesh = new THREE.LineSegments( geometry, material );
+				group.add( linesMesh );
+
+				//
+
+				// stats = new Stats();
+                // container.appendChild( stats.dom );
+                
 				animate();
+				
+            }
+
+            function animateBuffer() {
+
+				var vertexpos = 0;
+				var colorpos = 0;
+				var numConnected = 0;
+
+				for ( var i = 0; i < particleCount; i ++ )
+					particlesData[ i ].numConnections = 0;
+
+				for ( var i = 0; i < particleCount; i ++ ) {
+
+					// get the particle
+					var particleData = particlesData[ i ];
+
+					particlePositions[ i * 3 ] += particleData.velocity.x;
+					particlePositions[ i * 3 + 1 ] += particleData.velocity.y;
+					particlePositions[ i * 3 + 2 ] += particleData.velocity.z;
+
+					if ( particlePositions[ i * 3 + 1 ] < - rHalf || particlePositions[ i * 3 + 1 ] > rHalf )
+						particleData.velocity.y = - particleData.velocity.y;
+
+					if ( particlePositions[ i * 3 ] < - rHalf || particlePositions[ i * 3 ] > rHalf )
+						particleData.velocity.x = - particleData.velocity.x;
+
+					if ( particlePositions[ i * 3 + 2 ] < - rHalf || particlePositions[ i * 3 + 2 ] > rHalf )
+						particleData.velocity.z = - particleData.velocity.z;
+
+					if ( effectController.limitConnections && particleData.numConnections >= effectController.maxConnections )
+						continue;
+
+					
+					// Check collision
+					for ( var j = i + 1; j < particleCount; j ++ ) {
+
+						var particleDataB = particlesData[ j ];
+						if ( effectController.limitConnections && particleDataB.numConnections >= effectController.maxConnections )
+							continue;
+
+						var dx = particlePositions[ i * 3 ] - particlePositions[ j * 3 ];
+						var dy = particlePositions[ i * 3 + 1 ] - particlePositions[ j * 3 + 1 ];
+						var dz = particlePositions[ i * 3 + 2 ] - particlePositions[ j * 3 + 2 ];
+						var dist = Math.sqrt( dx * dx + dy * dy + dz * dz );
+
+						if(i === 0){
+							particle1 = {dx, dy, dz};
+						}
+
+						if ( dist < effectController.minDistance ) {
+
+							particleData.numConnections ++;
+							particleDataB.numConnections ++;
+
+							var alpha = 1.0 - dist / effectController.minDistance;
+
+							positions[ vertexpos ++ ] = particlePositions[ i * 3 ];
+							positions[ vertexpos ++ ] = particlePositions[ i * 3 + 1 ];
+							positions[ vertexpos ++ ] = particlePositions[ i * 3 + 2 ];
+
+							positions[ vertexpos ++ ] = particlePositions[ j * 3 ];
+							positions[ vertexpos ++ ] = particlePositions[ j * 3 + 1 ];
+							positions[ vertexpos ++ ] = particlePositions[ j * 3 + 2 ];
+
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+							colors[ colorpos ++ ] = alpha;
+
+							numConnected ++;
+
+						}
+
+					}
+
+				}
+
+
+				linesMesh.geometry.setDrawRange( 0, numConnected * 2 );
+				linesMesh.geometry.attributes.position.needsUpdate = true;
+				linesMesh.geometry.attributes.color.needsUpdate = true;
+
+				pointCloud.geometry.attributes.position.needsUpdate = true;
+
+
+				requestAnimationFrame( animate );
 
 			}
 
+			
+
+            
+            // resize
 			function onWindowResize() {
 
 				camera.aspect = window.innerWidth / window.innerHeight;
@@ -210,18 +367,20 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
 
-				controls.handleResize();
+				// controls.handleResize();
 
 			}
 
-			function animate() {
 
-				requestAnimationFrame( animate );
+            // animate
+			function animate() {
+                requestAnimationFrame( animateBuffer );
 				render();
 
 			}
 
 
+            // render
 			function render() {
 
 				var delta = clock.getDelta();
