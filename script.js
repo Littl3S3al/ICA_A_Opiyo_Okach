@@ -3,36 +3,6 @@ import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui
 import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
         
 
-let camera, controls, scene, renderer, light;
-
-// sound variables
-var material1, material2, material3;
-let analyser1, analyser2, analyser3;
-
-// buffer geometry variables
-let group;
-let particlesData = [];
-let positions, colors;
-let particles;
-let pointCloud;
-let particlePositions;
-let linesMesh;
-
-const maxParticleCount = 100;
-const particleCount = 50;
-const r = 200;
-const rHalf = r / 2;
-
-let effectController = {
-	showDots: true,
-	showLines: true,
-	minDistance: 150,
-	limitConnections: false,
-	maxConnections: 20,
-	particleCount: 500
-};
-
-var particle1 = {};
 
 // timer
 let clock = new THREE.Clock();
@@ -42,7 +12,34 @@ let startButton = document.getElementById( 'startButton' );
 startButton.addEventListener( 'click', () => {
 	init(); bufferGeo();
 } );
-            
+		 
+
+// add cubes
+// add a box
+const boxWidth = 5;
+const boxHeight = 5;
+const boxDepth = 5;
+const geometryBox = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+// const material = new THREE.MeshBasicMaterial({color: 0x44aa88});
+
+const makeInstance = (geometry, x, y, z) => {
+	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
+
+	const cube = new THREE.Mesh(geometry, material);
+	scene.add(cube);
+
+	cube.position.set(  x, y, z );
+	cube.material.transparent = true ;
+	cube.material.opacity = 0 ;
+
+	return cube;
+}
+
+
+// make text
+
+	
+	
 
 
             // function to add all sound elements
@@ -53,7 +50,7 @@ startButton.addEventListener( 'click', () => {
 				var overlay = document.getElementById( 'overlay' );
 				overlay.remove();
 
-        // bring in camera
+        		// bring in camera
 				camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.set( 0, 25, 200 );
 
@@ -61,15 +58,26 @@ startButton.addEventListener( 'click', () => {
 				var listener = new THREE.AudioListener();
 				camera.add( listener );
 
-        // scene
+        		// scene
 				scene = new THREE.Scene();
 				scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 
-        // light
+        		// light
 				light = new THREE.DirectionalLight( 0xffffff );
 				light.position.set( 0, 0.5, 1 ).normalize();
 				scene.add( light );
 
+				cubes = [
+					makeInstance(geometryBox, 0, 0, 0), 
+					makeInstance(geometryBox, 0, 0, 0), 
+					makeInstance(geometryBox, 0, 0, 0), 
+					makeInstance(geometryBox, 0, 0, 0), 
+					makeInstance(geometryBox, 0, 0, 0), 
+					makeInstance(geometryBox, 0, 0, 0)
+				]
+				
+
+				// sound spheres
 				var sphere = new THREE.SphereBufferGeometry( 20, 32, 16 );
 
 				material1 = new THREE.MeshPhongMaterial( { color: 0xffaa00, flatShading: true, shininess: 0 } );
@@ -191,6 +199,53 @@ startButton.addEventListener( 'click', () => {
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
+				// add text
+				const objects = [];
+				const spread = 15;
+
+				function addObject(x, y, obj) {
+					obj.position.x = x * spread;
+					obj.position.y = y * spread;
+
+					scene.add(obj);
+					objects.push(obj);
+				}
+
+	{
+		const loader = new THREE.FontLoader();
+		// promisify font loading
+		function loadFont(url) {
+		return new Promise((resolve, reject) => {
+			loader.load(url, resolve, undefined, reject);
+		});
+		}
+
+    async function doit(text, parent) {
+      const font = await loadFont('https://threejsfundamentals.org/threejs/resources/threejs/fonts/helvetiker_regular.typeface.json');   
+      const geometry = new THREE.TextBufferGeometry(text, {
+        font: font,
+        size: 5.0,
+        height: .2,
+        curveSegments: 12,
+        bevelEnabled: false
+      });
+
+	  const material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
+      const mesh = new THREE.Mesh(geometry, material);
+      geometry.computeBoundingBox();
+      geometry.boundingBox.getCenter(mesh.position).multiplyScalar(-1);
+
+      parent.add(mesh);
+
+      addObject(.5, 0, parent);
+	}
+	const words = ['space', 'image', 'sound', 'text', 'data', 'body'];
+	cubes.forEach((cube, i) => {
+		doit(words[i], cube);
+	})
+}
+
+
 			}
 
             function bufferGeo() {
@@ -224,16 +279,19 @@ startButton.addEventListener( 'click', () => {
 					particlePositions[ i * 3 + 1 ] = y;
 					particlePositions[ i * 3 + 2 ] = z;
 
+					
+
 					// add it to the geometry
 					particlesData.push( {
 						velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 2, - 1 + Math.random() * 2 ),
 						numConnections: 0
 					} );
-
 				}
+
 
 				particles.setDrawRange( 0, particleCount );
 				particles.setAttribute( 'position', new THREE.BufferAttribute( particlePositions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+				
 
 				// create the particle system
 				pointCloud = new THREE.Points( particles, pMaterial );
@@ -247,6 +305,7 @@ startButton.addEventListener( 'click', () => {
 				geometry.computeBoundingSphere();
 
 				geometry.setDrawRange( 0, 0 );
+
 
 				var material = new THREE.LineBasicMaterial( {
 					vertexColors: true,
@@ -267,11 +326,11 @@ startButton.addEventListener( 'click', () => {
             }
 
             function animateBuffer() {
-
+				let k = 0;
 				var vertexpos = 0;
 				var colorpos = 0;
 				var numConnected = 0;
-
+				
 				for ( var i = 0; i < particleCount; i ++ )
 					particlesData[ i ].numConnections = 0;
 
@@ -283,6 +342,18 @@ startButton.addEventListener( 'click', () => {
 					particlePositions[ i * 3 ] += particleData.velocity.x;
 					particlePositions[ i * 3 + 1 ] += particleData.velocity.y;
 					particlePositions[ i * 3 + 2 ] += particleData.velocity.z;
+
+					let remainder = Math.floor(particleCount / 6);
+					if(i % remainder === 0 && k < 6){
+						particleXYZ[k] = {
+							x: particlePositions[ i * 3 ], 
+							y: particlePositions[ i * 3 + 1 ], 
+							z: particlePositions[ i * 3 + 2 ]
+						};
+						k++
+					}
+
+					
 
 					if ( particlePositions[ i * 3 + 1 ] < - rHalf || particlePositions[ i * 3 + 1 ] > rHalf )
 						particleData.velocity.y = - particleData.velocity.y;
@@ -309,10 +380,7 @@ startButton.addEventListener( 'click', () => {
 						var dz = particlePositions[ i * 3 + 2 ] - particlePositions[ j * 3 + 2 ];
 						var dist = Math.sqrt( dx * dx + dy * dy + dz * dz );
 
-						if(i === 0){
-							particle1 = {dx, dy, dz};
-						}
-
+						
 						if ( dist < effectController.minDistance ) {
 
 							particleData.numConnections ++;
@@ -351,6 +419,10 @@ startButton.addEventListener( 'click', () => {
 
 				pointCloud.geometry.attributes.position.needsUpdate = true;
 
+				cubes.forEach((cube, index) => {
+					cube.position.set(particleXYZ[index].x, particleXYZ[index].y, particleXYZ[index].z);
+					cube.rotation.y = Math.atan2( ( camera.position.x - cube.position.x ), ( camera.position.z - cube.position.z ) );
+				});
 
 				requestAnimationFrame( animate );
 

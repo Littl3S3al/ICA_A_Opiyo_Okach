@@ -18,6 +18,8 @@ body {
     .container{
         width: 100vw;
         height: 100vh;
+        position: relative;
+        overflow: hidden;
     }
     .labels{
         position: absolute;  /* let us position ourself inside the container */
@@ -25,5 +27,7 @@ body {
         top: 0;
         button{
             cursor: pointer;
+            left: 0;
+            top: 0;
         }
     }
