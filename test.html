@@ -1,53 +1,58 @@
-import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/build/three.module.js';
-import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
-import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opiyo</title>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="overlay">
+        <button id="startButton">Play</button>
+    </div>
+
+    <div class="container">
+        <div class="labels">
+        </div>
+    </div>
+
+    <script src="globals.js"></script>
+    <script type="module">
+        import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/build/three.module.js';
+        import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
+        import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
+
+        let open = false;
+
+        // timer
+        let clock = new THREE.Clock();
+                
+        var mouse = new THREE.Vector2(), INTERSECTED;
+
+        // add cubes
+        // add a box
+        const boxWidth = 20;
+        const boxHeight = 5;
+        const boxDepth = 1;
+        const geometryBox = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+        // const material = new THREE.MeshBasicMaterial({color: 0x44aa88});
+
+        const makeInstance = (geometry, x, y, z) => {
+            const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
+
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            cube.position.set(  x, y, z );
+            cube.material.transparent = true ;
+            cube.material.opacity = 0;
+
+            return cube;
+        }
         
-
-
-// timer
-let clock = new THREE.Clock();
-
-// DOM start button
-let startButton = document.getElementById( 'startButton' );
-startButton.addEventListener( 'click', () => {
-	init(); bufferGeo();
-} );
-		 
-var mouse = new THREE.Vector2(), INTERSECTED;
-
-// add cubes
-// add a box
-const boxWidth = 5;
-const boxHeight = 5;
-const boxDepth = 5;
-const geometryBox = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-// const material = new THREE.MeshBasicMaterial({color: 0x44aa88});
-
-const makeInstance = (geometry, x, y, z) => {
-	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
-
-	const cube = new THREE.Mesh(geometry, material);
-	scene.add(cube);
-
-	cube.position.set(  x, y, z );
-	cube.material.transparent = true ;
-	cube.material.opacity = 0 ;
-
-	return cube;
-}
-
-
-// make text
-
-	
-	
-
-
-            // function to add all sound elements
-			function init() {
-
-                // remove start button
-                console.log('init');
+        const main = () => {
+            // remove start button
+            console.log('init');
 				var overlay = document.getElementById( 'overlay' );
 				overlay.remove();
 
@@ -183,7 +188,7 @@ const makeInstance = (geometry, x, y, z) => {
 
 				//
 
-        // create canvas
+                // create canvas
                 const container = document.querySelector('.container');
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
@@ -192,15 +197,15 @@ const makeInstance = (geometry, x, y, z) => {
 
 				//
 
-            // add controls
+                // add controls
 				controls = new OrbitControls( camera, renderer.domElement );
                 controls.target.set(0, 5, 0);
 
 				//
 
-				window.addEventListener( 'resize', onWindowResize, false );
+                window.addEventListener( 'resize', onWindowResize, false );
 
-				// add text
+                	// add text
 				const objects = [];
 				const spread = 15;
 
@@ -228,14 +233,13 @@ const makeInstance = (geometry, x, y, z) => {
 					size: 5.0,
 					height: .2,
 					curveSegments: 12,
-					bevelEnabled: false
+                    bevelEnabled: false
 				});
 
 				const material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
 				const mesh = new THREE.Mesh(geometry, material);
 				geometry.computeBoundingBox();
-				geometry.boundingBox.getCenter(mesh.position).multiplyScalar(-1);
-				geometry.name = text;
+                geometry.boundingBox.getCenter(mesh.position).multiplyScalar(-1);
 
 				parent.add(mesh);
 
@@ -243,19 +247,20 @@ const makeInstance = (geometry, x, y, z) => {
 				}
 				const words = ['space', 'image', 'sound', 'text', 'data', 'body'];
 				cubes.forEach((cube, i) => {
-					doit(words[i], cube);
+                    doit(words[i], cube);
+                    cube.name = words[i];
 				});
-
-
-				raycaster = new THREE.Raycaster();
 			}
+                
+                var delta = clock.getDelta();
 
+				controls.update( delta );
 
-			}
+				material1.emissive.b = analyser1.getAverageFrequency() / 256;
+				material2.emissive.b = analyser2.getAverageFrequency() / 256;
+                material3.emissive.b = analyser3.getAverageFrequency() / 256;
 
-            function bufferGeo() {
-
-				group = new THREE.Group();
+                group = new THREE.Group();
 				scene.add( group );
 
 				var segments = maxParticleCount * maxParticleCount;
@@ -288,7 +293,7 @@ const makeInstance = (geometry, x, y, z) => {
 
 					// add it to the geometry
 					particlesData.push( {
-						velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 2, - 1 + Math.random() * 2 ),
+						velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 1, - 1 + Math.random() * 2 ),
 						numConnections: 0
 					} );
 				}
@@ -319,19 +324,10 @@ const makeInstance = (geometry, x, y, z) => {
 				} );
 
 				linesMesh = new THREE.LineSegments( geometry, material );
-				group.add( linesMesh );
-
-				//
-
-				// stats = new Stats();
-                // container.appendChild( stats.dom );
+                group.add( linesMesh );
                 
-				animate();
-				
-            }
-
-            function animateBuffer() {
-				let k = 0;
+                function animateBuffer() {
+                    let k = 0;
 				var vertexpos = 0;
 				var colorpos = 0;
 				var numConnected = 0;
@@ -344,9 +340,9 @@ const makeInstance = (geometry, x, y, z) => {
 					// get the particle
 					var particleData = particlesData[ i ];
 
-					particlePositions[ i * 3 ] += particleData.velocity.x;
-					particlePositions[ i * 3 + 1 ] += particleData.velocity.y;
-					particlePositions[ i * 3 + 2 ] += particleData.velocity.z;
+					particlePositions[ i * 3 ] += particleData.velocity.x/2;
+					particlePositions[ i * 3 + 1 ] += particleData.velocity.y/2;
+					particlePositions[ i * 3 + 2 ] += particleData.velocity.z/2;
 
 					let remainder = Math.floor(particleCount / 6);
 					if(i % remainder === 0 && k < 6){
@@ -428,62 +424,123 @@ const makeInstance = (geometry, x, y, z) => {
 					cube.position.set(particleXYZ[index].x, particleXYZ[index].y, particleXYZ[index].z);
 					cube.rotation.y = Math.atan2( ( camera.position.x - cube.position.x ), ( camera.position.z - cube.position.z ) );
 				});
+                }
+                
 
-				requestAnimationFrame( animate );
+                class PickHelper {
+                constructor() {
+                this.raycaster = new THREE.Raycaster();
+                this.pickedObject = null;
+                this.pickedObjectSavedColor = 0;
+                }
+                pick(normalizedPosition, scene, camera) {
+                // restore the color if there is a picked object
+                if (this.pickedObject) {
+                    this.pickedObject.material.emissive.setHex(this.pickedObjectSavedColor);
+                    this.pickedObject = undefined;
+                }
 
-			}
+                // cast a ray through the frustum
+                this.raycaster.setFromCamera(normalizedPosition, camera);
+                // get the list of objects the ray intersected
+                const intersectedObjects = this.raycaster.intersectObjects(scene.children);
+                if (intersectedObjects.length) {
+                    // pick the first object. It's the closest one
+                    this.pickedObject = intersectedObjects[0].object;
+                }
+                }
+            }
 
-			
-
-            
-            // resize
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-				// controls.handleResize();
-
-			}
-
-
-            // animate
-			function animate() {
-			
-
-
-
-
-
-
-                requestAnimationFrame( animateBuffer );
-				render();
-
-			}
+            const pickPosition = {x: 0, y: 0};
+            const pickHelper = new PickHelper();
+            clearPickPosition();
 
 
-            // render
-			function render() {
+                // render functions
 
-				var delta = clock.getDelta();
+                renderer.render( scene, camera );
 
-				controls.update( delta );
+                const render = () => {
+                    if(!open){
+                        renderer.render(scene, camera);
+                        requestAnimationFrame(render);
+                        requestAnimationFrame(animateBuffer);
+                        pickHelper.pick(pickPosition, scene, camera);
+                        
+                        if(pickHelper.pickedObject){
+                            if(pickHelper.pickedObject.name){
+                                popup(pickHelper.pickedObject.name)
+                            }
+                        }
+                    }
+                }
 
-				material1.emissive.b = analyser1.getAverageFrequency() / 256;
-				material2.emissive.b = analyser2.getAverageFrequency() / 256;
-				material3.emissive.b = analyser3.getAverageFrequency() / 256;
+                requestAnimationFrame(render);
 
-				renderer.render( scene, camera );
 
-			}
+                function getCanvasRelativePosition(event) {
+                const rect = renderer.domElement .getBoundingClientRect();
+                return {
+                x: (event.clientX - rect.left) * renderer.domElement .width  / rect.width,
+                y: (event.clientY - rect.top ) * renderer.domElement .height / rect.height,
+                };
+            }
 
-			function onDocumentMouseMove( event ) {
+            function setPickPosition(event) {
+                const pos = getCanvasRelativePosition(event);
+                pickPosition.x = (pos.x / renderer.domElement .width ) *  2 - 1;
+                pickPosition.y = (pos.y / renderer.domElement .height) * -2 + 1;  // note we flip Y
+            }
 
-				event.preventDefault();
+            function clearPickPosition() {
+                // unlike the mouse which always has a position
+                // if the user stops touching the screen we want
+                // to stop picking. For now we just pick a value
+                // unlikely to pick something
+                pickPosition.x = -100000;
+                pickPosition.y = -100000;
+            }
+            window.addEventListener('mousemove', setPickPosition);
+            window.addEventListener('mouseout', clearPickPosition);
+            window.addEventListener('mouseleave', clearPickPosition);
 
-				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            window.addEventListener('touchstart', (event) => {
+                // prevent the window from scrolling
+                event.preventDefault();
+                setPickPosition(event.touches[0]);
+            }, {passive: false});
 
-			}
+            window.addEventListener('touchmove', (event) => {
+                setPickPosition(event.touches[0]);
+            });
+
+            window.addEventListener('touchend', clearPickPosition);
+}
+    
+
+     // resize
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize( window.innerWidth, window.innerHeight );
+
+        // controls.handleResize();
+
+    }
+
+
+    let startButton = document.getElementById( 'startButton' );
+    startButton.addEventListener( 'click', () => {
+        main();
+    } );
+
+
+    const popup = (name) => {
+        console.log(name);
+    }
+
+    </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-let camera, controls, scene, renderer, light;
+let camera, controls, scene, renderer, light, raycaster;
 
 // sound variables
 var material1, material2, material3;
@@ -29,3 +29,5 @@ let effectController = {
 
 var particleXYZ = [];
 let cubes = [];
+
+let time;
