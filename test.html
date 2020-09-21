@@ -54,7 +54,26 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('particles step 4');
+console.log('added cubes');
+
+const makeInstance = (scene, geometry, x, y, z) => {
+	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
+
+	const cube = new THREE.Mesh(geometry, material);
+	scene.add(cube);
+
+	cube.position.set(  x, y, z );
+	cube.material.transparent = true ;
+	cube.material.opacity = 0;
+
+	return cube;
+};
+
+// add a box
+const boxWidth = 20;
+const boxHeight = 10;
+const boxDepth = 1;
+const geometryBox = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
 function main() {
 
@@ -171,9 +190,7 @@ function main() {
   
   audioElems();
 
-
-
-
+// particle related variables
   let particlesData = [];
   let positions, colors;
   let particles;
@@ -186,6 +203,9 @@ function main() {
   const r = 200;
   const rHalf = r / 2;
 
+  var particleXYZ = [];
+  let cubes = []; 
+
   let effectController = {
       showDots: true,
       showLines: true,
@@ -195,6 +215,23 @@ function main() {
       particleCount: 500
   };
 
+
+  // add cubes to be repositioned later
+const addInteractives = () => {
+  cubes = [
+			makeInstance(scene, geometryBox, 0, 0, 0), 
+			makeInstance(scene, geometryBox, 0, 0, 0), 
+			makeInstance(scene, geometryBox, 0, 0, 0), 
+			makeInstance(scene, geometryBox, 0, 0, 0), 
+			makeInstance(scene, geometryBox, 0, 0, 0), 
+			makeInstance(scene, geometryBox, 0, 0, 0)
+		]
+}
+
+addInteractives();
+
+
+  // create cloud group
   const cloudGroup = new THREE.Group();
   scene.add( cloudGroup );
 
@@ -262,87 +299,88 @@ function main() {
 		cloudGroup.add( linesMesh );
     
     function animateBuffer() {
-			let k = 0;
-		var vertexpos = 0;
-		var colorpos = 0;
-		var numConnected = 0;
-		
-		for ( var i = 0; i < particleCount; i ++ )
-			particlesData[ i ].numConnections = 0;
+			      let k = 0;
+          var vertexpos = 0;
+          var colorpos = 0;
+          var numConnected = 0;
+          
+          for ( var i = 0; i < particleCount; i ++ )
+            particlesData[ i ].numConnections = 0;
 
-		for ( var i = 0; i < particleCount; i ++ ) {
+          for ( var i = 0; i < particleCount; i ++ ) {
 
-			// get the particle
-			var particleData = particlesData[ i ];
+            // get the particle
+            var particleData = particlesData[ i ];
 
-			particlePositions[ i * 3 ] += particleData.velocity.x/7;
-			particlePositions[ i * 3 + 1 ] += particleData.velocity.y/7;
-			particlePositions[ i * 3 + 2 ] += particleData.velocity.z/7;
+            particlePositions[ i * 3 ] += particleData.velocity.x/7;
+            particlePositions[ i * 3 + 1 ] += particleData.velocity.y/7;
+            particlePositions[ i * 3 + 2 ] += particleData.velocity.z/7;
 
-			// let remainder = Math.floor(particleCount / 6);
-			// if(i % remainder === 0 && k < 6){
-			// 	particleXYZ[k] = {
-			// 		x: particlePositions[ i * 3 ], 
-			// 		y: particlePositions[ i * 3 + 1 ], 
-			// 		z: particlePositions[ i * 3 + 2 ]
-			// 	};
-			// 	k++
-			// }
+            // calculate where cubes are going to be
+            let remainder = Math.floor(particleCount / 6);
+            if(i % remainder === 0 && k < 6){
+            	particleXYZ[k] = {
+            		x: particlePositions[ i * 3 ], 
+            		y: particlePositions[ i * 3 + 1 ], 
+            		z: particlePositions[ i * 3 + 2 ]
+            	};
+            	k++
+            }
 
-			
+            
 
-			if ( particlePositions[ i * 3 + 1 ] < - rHalf || particlePositions[ i * 3 + 1 ] > rHalf )
-				particleData.velocity.y = - particleData.velocity.y;
+            if ( particlePositions[ i * 3 + 1 ] < - rHalf || particlePositions[ i * 3 + 1 ] > rHalf )
+              particleData.velocity.y = - particleData.velocity.y;
 
-			if ( particlePositions[ i * 3 ] < - rHalf || particlePositions[ i * 3 ] > rHalf )
-				particleData.velocity.x = - particleData.velocity.x;
+            if ( particlePositions[ i * 3 ] < - rHalf || particlePositions[ i * 3 ] > rHalf )
+              particleData.velocity.x = - particleData.velocity.x;
 
-			if ( particlePositions[ i * 3 + 2 ] < - rHalf || particlePositions[ i * 3 + 2 ] > rHalf )
-				particleData.velocity.z = - particleData.velocity.z;
+            if ( particlePositions[ i * 3 + 2 ] < - rHalf || particlePositions[ i * 3 + 2 ] > rHalf )
+              particleData.velocity.z = - particleData.velocity.z;
 
-			if ( effectController.limitConnections && particleData.numConnections >= effectController.maxConnections )
-				continue;
+            if ( effectController.limitConnections && particleData.numConnections >= effectController.maxConnections )
+              continue;
 
-			
-			// Check collision
-			for ( var j = i + 1; j < particleCount; j ++ ) {
+            
+            // Check collision
+            for ( var j = i + 1; j < particleCount; j ++ ) {
 
-				var particleDataB = particlesData[ j ];
-				if ( effectController.limitConnections && particleDataB.numConnections >= effectController.maxConnections )
-					continue;
+              var particleDataB = particlesData[ j ];
+              if ( effectController.limitConnections && particleDataB.numConnections >= effectController.maxConnections )
+                continue;
 
-				var dx = particlePositions[ i * 3 ] - particlePositions[ j * 3 ];
-				var dy = particlePositions[ i * 3 + 1 ] - particlePositions[ j * 3 + 1 ];
-				var dz = particlePositions[ i * 3 + 2 ] - particlePositions[ j * 3 + 2 ];
-				var dist = Math.sqrt( dx * dx + dy * dy + dz * dz );
+              var dx = particlePositions[ i * 3 ] - particlePositions[ j * 3 ];
+              var dy = particlePositions[ i * 3 + 1 ] - particlePositions[ j * 3 + 1 ];
+              var dz = particlePositions[ i * 3 + 2 ] - particlePositions[ j * 3 + 2 ];
+              var dist = Math.sqrt( dx * dx + dy * dy + dz * dz );
 
-				
-				if ( dist < effectController.minDistance ) {
+              
+              if ( dist < effectController.minDistance ) {
 
-					particleData.numConnections ++;
-					particleDataB.numConnections ++;
+                particleData.numConnections ++;
+                particleDataB.numConnections ++;
 
-					var alpha = 1.0 - dist / effectController.minDistance;
+                var alpha = 1.0 - dist / effectController.minDistance;
 
-					positions[ vertexpos ++ ] = particlePositions[ i * 3 ];
-					positions[ vertexpos ++ ] = particlePositions[ i * 3 + 1 ];
-					positions[ vertexpos ++ ] = particlePositions[ i * 3 + 2 ];
+                positions[ vertexpos ++ ] = particlePositions[ i * 3 ];
+                positions[ vertexpos ++ ] = particlePositions[ i * 3 + 1 ];
+                positions[ vertexpos ++ ] = particlePositions[ i * 3 + 2 ];
 
-					positions[ vertexpos ++ ] = particlePositions[ j * 3 ];
-					positions[ vertexpos ++ ] = particlePositions[ j * 3 + 1 ];
-					positions[ vertexpos ++ ] = particlePositions[ j * 3 + 2 ];
+                positions[ vertexpos ++ ] = particlePositions[ j * 3 ];
+                positions[ vertexpos ++ ] = particlePositions[ j * 3 + 1 ];
+                positions[ vertexpos ++ ] = particlePositions[ j * 3 + 2 ];
 
-					colors[ colorpos ++ ] = alpha;
-					colors[ colorpos ++ ] = alpha;
-					colors[ colorpos ++ ] = alpha;
+                colors[ colorpos ++ ] = alpha;
+                colors[ colorpos ++ ] = alpha;
+                colors[ colorpos ++ ] = alpha;
 
-					colors[ colorpos ++ ] = alpha;
-					colors[ colorpos ++ ] = alpha;
-					colors[ colorpos ++ ] = alpha;
+                colors[ colorpos ++ ] = alpha;
+                colors[ colorpos ++ ] = alpha;
+                colors[ colorpos ++ ] = alpha;
 
-					numConnected ++;
+                numConnected ++;
 
-				}
+              }
 
 			}
 
@@ -353,10 +391,14 @@ function main() {
 		linesMesh.geometry.attributes.position.needsUpdate = true;
 		linesMesh.geometry.attributes.color.needsUpdate = true;
 
-		pointCloud.geometry.attributes.position.needsUpdate = true;
+    pointCloud.geometry.attributes.position.needsUpdate = true;
+    
+    cubes.forEach((cube, index) => {
+			cube.position.set(particleXYZ[index].x, particleXYZ[index].y, particleXYZ[index].z);
+			cube.rotation.y = Math.atan2( ( camera.position.x - cube.position.x ), ( camera.position.z - cube.position.z ) );
+		});
 
 		}
-
 
 
   function resizeRendererToDisplaySize(renderer) {
