@@ -27,7 +27,7 @@
 import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r115/build/three.module.js';
 import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 
-console.log('orbit controls bigger')
+console.log('orbit controls update')
         const main = () => {
             // baisc setup
             const canvas = document.querySelector('#c');
@@ -75,8 +75,9 @@ console.log('orbit controls bigger')
             ]
 
             // add controls
-		      controls = new OrbitControls( camera, renderer.domElement );
-		      controls.target.set(0, 5, 0);
+		      controls = new OrbitControls( camera, canvas );
+          controls.target.set(0, 5, 0);
+          controls.update();
 
 
             // render the scene
