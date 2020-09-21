@@ -95,63 +95,22 @@ function main() {
     scene.add(light.target);
   }
 
-
-  // temporary stuff
-  {
-    const planeSize = 40;
-
-    const loader = new THREE.TextureLoader();
-    const texture = loader.load('https://threejsfundamentals.org/threejs/resources/images/checker.png');
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    texture.magFilter = THREE.NearestFilter;
-    const repeats = planeSize / 2;
-    texture.repeat.set(repeats, repeats);
-
-    const planeGeo = new THREE.PlaneBufferGeometry(planeSize, planeSize);
-    const planeMat = new THREE.MeshPhongMaterial({
-      map: texture,
-      side: THREE.DoubleSide,
-    });
-    const mesh = new THREE.Mesh(planeGeo, planeMat);
-    mesh.rotation.x = Math.PI * -.5;
-    scene.add(mesh);
-  }
-  {
-    const cubeSize = 4;
-    const cubeGeo = new THREE.BoxBufferGeometry(cubeSize, cubeSize, cubeSize);
-    const cubeMat = new THREE.MeshPhongMaterial({color: '#8AC'});
-    const mesh = new THREE.Mesh(cubeGeo, cubeMat);
-    mesh.position.set(cubeSize + 1, cubeSize / 2, 0);
-    scene.add(mesh);
-  }
-  {
-    const sphereRadius = 3;
-    const sphereWidthDivisions = 32;
-    const sphereHeightDivisions = 16;
-    const sphereGeo = new THREE.SphereBufferGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
-    const sphereMat = new THREE.MeshPhongMaterial({color: '#CA8'});
-    const mesh = new THREE.Mesh(sphereGeo, sphereMat);
-    mesh.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
-    scene.add(mesh);
-  }
-
   // bring in audio listener
   const listener = new THREE.AudioListener();
   camera.add( listener );
 
   // sound spheres
-  const sphere = new THREE.SphereBufferGeometry( 20, 32, 16 );
+  const square = new THREE.BoxGeometry(30, 30, 30);
 
-  const material1 = new THREE.MeshPhongMaterial( { color: 0xffaa00, flatShading: true, shininess: 0 } );
-  const material2 = new THREE.MeshPhongMaterial( { color: 0xff2200, flatShading: true, shininess: 0 } );
-  const material3 = new THREE.MeshPhongMaterial( { color: 0x6622aa, flatShading: true, shininess: 0 } );
+  const material1 = new THREE.MeshBasicMaterial( { color: 0xffaa00 } );
+  const material2 = new THREE.MeshBasicMaterial( { color: 0xff2200 } );
+  const material3 = new THREE.MeshBasicMaterial( { color: 0x6622aa } );
 
   // sound spheres
 
   const audioLoader = new THREE.AudioLoader();
 
-  const mesh1 = new THREE.Mesh( sphere, material1 );
+  const mesh1 = new THREE.Mesh( square, material1 );
   mesh1.position.set( - 250, 30, 0 );
   scene.add( mesh1 );
 
@@ -168,7 +127,7 @@ function main() {
 
   //
 
-  const mesh2 = new THREE.Mesh( sphere, material2 );
+  const mesh2 = new THREE.Mesh( square, material2 );
   mesh2.position.set( 250, 30, 0 );
   scene.add( mesh2 );
 
@@ -185,7 +144,7 @@ function main() {
 
   //
 
-  const mesh3 = new THREE.Mesh( sphere, material3 );
+  const mesh3 = new THREE.Mesh( square, material3 );
   mesh3.position.set(  0, 30, - 250 );
   scene.add( mesh3 );
 
