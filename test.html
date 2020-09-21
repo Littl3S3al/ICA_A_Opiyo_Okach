@@ -54,7 +54,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('changed point elems 1');
+console.log('just group');
 
 function main() {
 
@@ -175,22 +175,6 @@ function main() {
   // point elements
   group = new THREE.Group();
   scene.add( group );
-
-  const segments = maxParticleCount * maxParticleCount;
-
-  positions = new Float32Array( segments * 3 );
-  colors = new Float32Array( segments * 3 );
-
-  const pMaterial = new THREE.PointsMaterial( {
-			color: 0xFFFFFF,
-			size: 4,
-			blending: THREE.AdditiveBlending,
-			transparent: true,
-			sizeAttenuation: false
-    } );
-    
-    particles = new THREE.BufferGeometry();
-		particlePositions = new Float32Array( maxParticleCount * 3 );
 
 
 
