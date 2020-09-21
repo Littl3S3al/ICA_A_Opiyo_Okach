@@ -28,7 +28,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('removed light');
+console.log('updated light');
 
 function main() {
 
@@ -57,6 +57,17 @@ function main() {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('black');
   scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
+
+  // add light
+  {
+    const color = 0xFFFFFF;
+    const intensity = 1;
+    const light = new THREE.DirectionalLight(color, intensity);
+    light.position.set(0, 0.5, 1);
+    light.target.position.set(0, 0, 0);
+    scene.add(light);
+    scene.add(light.target);
+  }
 
   {
     const planeSize = 40;
@@ -97,15 +108,7 @@ function main() {
     scene.add(mesh);
   }
 
-  {
-    const color = 0xFFFFFF;
-    const intensity = 1;
-    const light = new THREE.DirectionalLight(color, intensity);
-    light.position.set(0, 10, 0);
-    light.target.position.set(-5, 0, 0);
-    scene.add(light);
-    scene.add(light.target);
-  }
+  
 
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
