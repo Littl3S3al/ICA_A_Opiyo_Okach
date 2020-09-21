@@ -37,6 +37,7 @@
     </div>
 
     <div class="three-js-container">
+      <canvas id="c"></canvas>
         <div class="labels">
         </div>
     </div>
@@ -178,12 +179,15 @@ const main = () => {
 
 		//
 
-		// create canvas
-		const container = document.querySelector('.three-js-container');
-		renderer = new THREE.WebGLRenderer( { antialias: true } );
+    // create canvas
+    const canvas = document.querySelector('#c');
+    const container = document.querySelector('.three-js-container');
+    
+		renderer = new THREE.WebGLRenderer( { canvas } );
 		renderer.setPixelRatio( window.devicePixelRatio );
-		renderer.setSize( window.innerWidth, window.innerHeight );
-		container.appendChild( renderer.domElement );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    container.appendChild( renderer.domElement );
+		
 
 		//
 
