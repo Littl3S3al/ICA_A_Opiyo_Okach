@@ -25,8 +25,9 @@
     <script type="module">
 
 import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r115/build/three.module.js';
+import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 
-
+console.log('orbit controls')
         const main = () => {
             // baisc setup
             const canvas = document.querySelector('#c');
@@ -35,8 +36,8 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
             const aspect = 2;
             const near = 0.1;
             const far = 5;
-            const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera.position.z = 2;
+            camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
+		        camera.position.set( 0, 25, 200 );
 
             const scene = new THREE.Scene();
 
@@ -72,6 +73,10 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
                 makeInstance(geometry, 0x8844aa, -2),
                 makeInstance(geometry, 0xaa8844, 2)
             ]
+
+            // add controls
+		      controls = new OrbitControls( camera, renderer.domElement );
+		      controls.target.set(0, 5, 0);
 
 
             // render the scene
