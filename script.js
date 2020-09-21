@@ -221,7 +221,7 @@ const main = () => {
 
 		var pMaterial = new THREE.PointsMaterial( {
 			color: 0xFFFFFF,
-			size: 5,
+			size: 4,
 			blending: THREE.AdditiveBlending,
 			transparent: true,
 			sizeAttenuation: false
