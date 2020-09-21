@@ -10,41 +10,10 @@
 </head>
 <body>
 
-    <div id="overlay" class="container-fluid">
-        <div class="row">
-            <div class="col-12 d-flex align-items-center justify-content-center">
-                <div>
-                    <h1>Opiyo Okach Project</h1>
-                    <h4>Instructions for computer</h4>
-                    <p>Use your mouse to engage with the project</p>
-                    <ul>
-                        <li>click and drag with the mouse to orbit around the network</li>
-                        <li>zoom in and out to move</li>
-                        <li>click on the words to open the different chapters of the project</li>
-                    </ul>
-                    <h4>Instructions for touch screen</h4>
-                    <ul>
-                        <li>tag and drag to orbit around the network</li>
-                        <li>pinch to zoom in and out</li>
-                        <li>tap on words to open different chapters of the project</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-12 text-center my-5">
-                <button id="startButton" class="btn btn-light btn-lg">Play</button>
-            </div>
-        </div>
-    </div>
-
     <div class="three-js-container">
       <canvas id="c"></canvas>
         <div class="labels">
         </div>
-    </div>
-
-    <div class="popupWindow">
-        <h1>test</h1>
-        <button id="close" class="btn btn-light btn-lg">close</button>
     </div>
     
 
@@ -55,119 +24,81 @@
 
     <script type="module">
 
-import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/build/three.module.js';
-// import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
-import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
-
-console.log('test only orbs')
-// timer
-let clock = new THREE.Clock();
+import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r115/build/three.module.js';
 
 
-const makeInstance = (geometry, x, y, z) => {
-	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
+        const main = () => {
+            // baisc setup
+            const canvas = document.querySelector('#c');
+            const renderer = new THREE.WebGLRenderer({canvas});
+            const fov = 75;
+            const aspect = 2;
+            const near = 0.1;
+            const far = 5;
+            const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.position.z = 2;
 
-	const cube = new THREE.Mesh(geometry, material);
-	scene.add(cube);
+            const scene = new THREE.Scene();
 
-	cube.position.set(  x, y, z );
-	cube.material.transparent = true ;
-	cube.material.opacity = 0;
+            // add light
+            {
+                const color = 0xFFFFFF;
+                const intensity = 1;
+                const light = new THREE.DirectionalLight(color, intensity);
+                light.position.set(-1,2,4);
+                scene.add(light);
+            }
 
-	return cube;
-};
+            // add a box
+            const boxWidth = 1;
+            const boxHeight = 1;
+            const boxDepth = 1;
+            const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+            // const material = new THREE.MeshBasicMaterial({color: 0x44aa88});
+            
+            const makeInstance = (geometry, color, x) => {
+                const material = new THREE.MeshPhongMaterial({color});
 
-let orbiting = false;
-let viewing = true;
+                const cube = new THREE.Mesh(geometry, material);
+                scene.add(cube);
 
-const main = () => {
-	// remove start button
-		var overlay = document.getElementById( 'overlay' );
-		overlay.remove();
+                cube.position.x = x;
 
-		// baisc setup
-    const canvas = document.querySelector('#c');
-    const renderer = new THREE.WebGLRenderer({canvas});
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000 );
-    camera.position.set( 0, 25, 200 );
+                return cube;
+            }
 
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
-
-    // add light
-		light = new THREE.DirectionalLight( 0xffffff );
-		light.position.set( 0, 0.5, 1 ).normalize();
-		scene.add( light );
-    
-    
-  // sound spheres
-  var sphere = new THREE.SphereBufferGeometry( 20, 32, 16 );
-
-  material1 = new THREE.MeshPhongMaterial( { color: 0xffaa00, flatShading: true, shininess: 0 } );
-  material2 = new THREE.MeshPhongMaterial( { color: 0xff2200, flatShading: true, shininess: 0 } );
-  material3 = new THREE.MeshPhongMaterial( { color: 0x6622aa, flatShading: true, shininess: 0 } );
-
-
-  var mesh1 = new THREE.Mesh( sphere, material1 );
-  mesh1.position.set( - 250, 30, 0 );
-  scene.add( mesh1 )
-
-  //
-
-  var mesh2 = new THREE.Mesh( sphere, material2 );
-  mesh2.position.set( 250, 30, 0 );
-  scene.add( mesh2 );
-
-  //
-
-  var mesh3 = new THREE.Mesh( sphere, material3 );
-  mesh3.position.set(  0, 30, - 250 );
-  scene.add( mesh3 );
+            const cubes = [
+                makeInstance(geometry, 0x44aa88, 0),
+                makeInstance(geometry, 0x8844aa, -2),
+                makeInstance(geometry, 0xaa8844, 2)
+            ]
 
 
+            // render the scene
+            renderer.render(scene, camera);
 
-  // add controls
-  controls = new OrbitControls( camera, renderer.domElement );
-		controls.target.set(0, 5, 0);
+            // create a loop to render animation
+            const render = (time) => {
+                time *= 0.001; //convert time to seconds
 
+                cubes.forEach((cube, index) => {
+                    const speed = 1 + index * .1;
+                    const rot = time * speed;
+                    cube.rotation.x = rot;
+                    cube.rotation.y = rot;
+                })
 
+                renderer.render(scene, camera);
 
+                requestAnimationFrame(render);
+            }
+            requestAnimationFrame(render);
 
-
-
-
-
-    renderer.render(scene, camera);
-
-// create a loop to render animation
-const render = (time) => {
-    time *= 0.001; //convert time to seconds
-
-    cubes.forEach((cube, index) => {
-        const speed = 1 + index * .1;
-        const rot = time * speed;
-        cube.rotation.x = rot;
-        cube.rotation.y = rot;
-    })
-
-    renderer.render(scene, camera);
-
-    requestAnimationFrame(render);
-}
-requestAnimationFrame(render);
-  }
-
-    
-  
+        }; //end of function
 
 
-
-    
-    let startButton = document.getElementById( 'startButton' );
-startButton.addEventListener( 'click', () => {
-	main();
-
-} );
+        // call the function
+        main();
 
 
     </script>
