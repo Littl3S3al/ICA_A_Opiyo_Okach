@@ -42,6 +42,9 @@
         </div>
     </div>
     
+    <audio loop id="music" preload="auto" style="display: none">
+      <source src="assets/bensound-anewbeginning.ogg" type="audio/ogg">
+    </audio>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
@@ -54,7 +57,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('added cubes');
+console.log('changed sound 1');
 
 const makeInstance = (scene, geometry, x, y, z) => {
 	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
@@ -135,15 +138,14 @@ function main() {
       mesh1.position.set( - 250, 30, 0 );
       scene.add( mesh1 );
 
+      var audioElement = document.getElementById( 'music' );
+      audioElement.play();
+
       const sound1 = new THREE.PositionalAudio( listener );
-      audioLoader.load( 'assets/bensound-anewbeginning.ogg', function ( buffer ) {
-
-        sound1.setLoop()
-        sound1.setBuffer( buffer );
-        sound1.setRefDistance( 20 );
-        sound1.play();
-
-      } );
+      
+      sound1.setMediaElementSource(audioElement );
+      sound1.setLoop()
+      sound1.setRefDistance( 20 );
       mesh1.add( sound1 );
 
       //
