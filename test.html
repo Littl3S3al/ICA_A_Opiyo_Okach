@@ -28,7 +28,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('just camera change');
+console.log('fog and light');
 
 function main() {
 
@@ -56,6 +56,12 @@ function main() {
   // new scene
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('black');
+  scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
+
+  // light
+  light = new THREE.DirectionalLight( 0xffffff );
+  light.position.set( 0, 0.5, 1 ).normalize();
+  scene.add( light );
 
   {
     const planeSize = 40;
