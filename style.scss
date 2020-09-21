@@ -18,11 +18,9 @@ body {
     width: 100vw;
     height: 100vh;
     background: black;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     color: white;
     overflow-y: scroll;
+    padding: 100px 20px;
 }
 .three-js-container{
     width: 100vw;
