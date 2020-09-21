@@ -3,14 +3,10 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 
 let open = false;
-let timer = 0;
 
-setInterval(() => { timer++ }, 1000)
 
 // timer
 let clock = new THREE.Clock();
-		
-var mouse = new THREE.Vector2(), INTERSECTED;
 
 // add cubes
 // add a box
