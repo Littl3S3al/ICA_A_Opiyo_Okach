@@ -58,7 +58,7 @@ import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/t
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 import { PositionalAudioHelper } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/helpers/PositionalAudioHelper.js';
 
-console.log('all sounds to mp3');
+console.log('brought in words');
 
 const makeInstance = (scene, geometry, x, y, z) => {
 	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
@@ -136,7 +136,7 @@ function main() {
       const audioLoader = new THREE.AudioLoader();
 
       const mesh1 = new THREE.Mesh( square, material1 );
-      mesh1.position.set( 250, 30, 0 );
+      mesh1.position.set(  - 250, 30, 0 );
       scene.add( mesh1 );
 
       const sound1 = new THREE.PositionalAudio( listener );
@@ -230,7 +230,54 @@ const addInteractives = () => {
 			makeInstance(scene, geometryBox, 0, 0, 0), 
 			makeInstance(scene, geometryBox, 0, 0, 0), 
 			makeInstance(scene, geometryBox, 0, 0, 0)
-		]
+    ];
+    
+    // add text
+		const objects = [];
+		const spread = 15;
+
+		function addObject(x, y, obj) {
+			obj.position.x = x * spread;
+			obj.position.y = y * spread;
+
+			scene.add(obj);
+			objects.push(obj);
+		}
+
+		{
+			const loader = new THREE.FontLoader();
+			// promisify font loading
+			function loadFont(url) {
+			return new Promise((resolve, reject) => {
+				loader.load(url, resolve, undefined, reject);
+			});
+			}
+
+		async function doit(text, parent) {
+		const font = await loadFont('https://threejsfundamentals.org/threejs/resources/threejs/fonts/helvetiker_regular.typeface.json');   
+		const geometry = new THREE.TextBufferGeometry(text, {
+			font: font,
+			size: 5.0,
+			height: .2,
+			curveSegments: 12,
+			bevelEnabled: false
+		});
+
+		const material = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
+		const mesh = new THREE.Mesh(geometry, material);
+		geometry.computeBoundingBox();
+		geometry.boundingBox.getCenter(mesh.position).multiplyScalar(-1);
+
+		parent.add(mesh);
+
+		addObject(.5, 0, parent);
+		}
+		const words = ['space', 'image', 'sound', 'text', 'data', 'body'];
+		cubes.forEach((cube, i) => {
+			doit(words[i], cube);
+			cube.name = words[i];
+		});
+	}
 }
 
 addInteractives();
