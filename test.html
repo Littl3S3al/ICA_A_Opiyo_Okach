@@ -28,15 +28,20 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('added sound');
+console.log('just sphere');
 
 function main() {
 
   // camera and canvas
   const canvas = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
+
+  const fov = 45;
+  const aspect = 2;  // the canvas default
+  const near = 0.1;
+  const far = 100;
   const camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
-  camera.position.set(0, 0, 20);
+  camera.position.set( 0, 25, 200 );
 
   // update camera
   function updateCamera() {
@@ -51,85 +56,25 @@ function main() {
   // new scene
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('black');
+  scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 
   // light
   light = new THREE.DirectionalLight( 0xffffff );
   light.position.set( 0, 0.5, 1 ).normalize();
   scene.add( light );
 
+  {
+    const sphereRadius = 3;
+    const sphereWidthDivisions = 32;
+    const sphereHeightDivisions = 16;
+    const sphereGeo = new THREE.SphereBufferGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
+    const sphereMat = new THREE.MeshPhongMaterial({color: '#CA8'});
+    const mesh = new THREE.Mesh(sphereGeo, sphereMat);
+    mesh.position.set(-sphereRadius - 1, sphereRadius + 2, 0);
+    scene.add(mesh);
+  }
 
-  // sound spheres
-  // bring in audio listener
-  var listener = new THREE.AudioListener();
-  camera.add( listener );
 
-  var sphere = new THREE.SphereBufferGeometry( 20, 32, 16 );
-
-  material1 = new THREE.MeshPhongMaterial( { color: 0xffaa00, flatShading: true, shininess: 0 } );
-  material2 = new THREE.MeshPhongMaterial( { color: 0xff2200, flatShading: true, shininess: 0 } );
-  material3 = new THREE.MeshPhongMaterial( { color: 0x6622aa, flatShading: true, shininess: 0 } );
-
-  // sound spheres
-
-  var audioLoader = new THREE.AudioLoader();
-
-  var mesh1 = new THREE.Mesh( sphere, material1 );
-  mesh1.position.set( - 250, 30, 0 );
-  scene.add( mesh1 );
-
-  var sound1 = new THREE.PositionalAudio( listener );
-  audioLoader.load( 'assets/bensound-anewbeginning.ogg', function ( buffer ) {
-
-    sound1.setLoop()
-    sound1.setBuffer( buffer );
-    sound1.setRefDistance( 20 );
-    sound1.play();
-
-  } );
-  mesh1.add( sound1 );
-
-  //
-
-  var mesh2 = new THREE.Mesh( sphere, material2 );
-  mesh2.position.set( 250, 30, 0 );
-  scene.add( mesh2 );
-
-  var sound2 = new THREE.PositionalAudio( listener );
-  audioLoader.load( 'assets/bensound-creativeminds.ogg', function ( buffer ) {
-
-    sound2.setLoop()
-    sound2.setBuffer( buffer );
-    sound2.setRefDistance( 20 );
-    sound2.play();
-
-  } );
-  mesh2.add( sound2 );
-
-  //
-
-  var mesh3 = new THREE.Mesh( sphere, material3 );
-  mesh3.position.set(  0, 30, - 250 );
-  scene.add( mesh3 );
-
-  var sound3 = new THREE.PositionalAudio( listener );
-  audioLoader.load( 'assets/bensound-ukulele.ogg', function ( buffer ) {
-
-    sound3.setLoop();
-    sound3.setBuffer( buffer );
-    sound3.setRefDistance( 20 );
-    sound3.play();
-
-  } );
-  mesh3.add( sound3 );
-
-  // analysers
-
-  analyser1 = new THREE.AudioAnalyser( sound1, 32 );
-  analyser2 = new THREE.AudioAnalyser( sound2, 32 );
-  analyser3 = new THREE.AudioAnalyser( sound3, 32 );
-  
-
-  // resizing
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
     const width = canvas.clientWidth;
@@ -141,7 +86,6 @@ function main() {
     return needResize;
   }
 
-  // rendering
   function render() {
 
     if (resizeRendererToDisplaySize(renderer)) {
