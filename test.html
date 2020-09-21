@@ -54,7 +54,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('brought in start button');
+console.log('added point cloud');
 
 function main() {
 
@@ -95,77 +95,154 @@ function main() {
     scene.add(light.target);
   }
 
-  // bring in audio listener
-  const listener = new THREE.AudioListener();
-  camera.add( listener );
+// bring in audio
+  const audioElems = () => {
+    // bring in audio listener
+      const listener = new THREE.AudioListener();
+      camera.add( listener );
 
-  // sound spheres
-  const square = new THREE.BoxGeometry(30, 30, 30);
+      // sound spheres
+      const square = new THREE.BoxGeometry(30, 30, 30);
 
-  const material1 = new THREE.MeshBasicMaterial( { color: 0xffaa00 } );
-  const material2 = new THREE.MeshBasicMaterial( { color: 0xff2200 } );
-  const material3 = new THREE.MeshBasicMaterial( { color: 0x6622aa } );
+      const material1 = new THREE.MeshBasicMaterial( { color: 0xffaa00 } );
+      const material2 = new THREE.MeshBasicMaterial( { color: 0xff2200 } );
+      const material3 = new THREE.MeshBasicMaterial( { color: 0x6622aa } );
 
-  // sound spheres
+      // sound spheres
 
-  const audioLoader = new THREE.AudioLoader();
+      const audioLoader = new THREE.AudioLoader();
 
-  const mesh1 = new THREE.Mesh( square, material1 );
-  mesh1.position.set( - 250, 30, 0 );
-  scene.add( mesh1 );
+      const mesh1 = new THREE.Mesh( square, material1 );
+      mesh1.position.set( - 250, 30, 0 );
+      scene.add( mesh1 );
 
-  const sound1 = new THREE.PositionalAudio( listener );
-  audioLoader.load( 'assets/bensound-anewbeginning.ogg', function ( buffer ) {
+      const sound1 = new THREE.PositionalAudio( listener );
+      audioLoader.load( 'assets/bensound-anewbeginning.ogg', function ( buffer ) {
 
-    sound1.setLoop()
-    sound1.setBuffer( buffer );
-    sound1.setRefDistance( 20 );
-    sound1.play();
+        sound1.setLoop()
+        sound1.setBuffer( buffer );
+        sound1.setRefDistance( 20 );
+        sound1.play();
 
-  } );
-  mesh1.add( sound1 );
+      } );
+      mesh1.add( sound1 );
 
-  //
+      //
 
-  const mesh2 = new THREE.Mesh( square, material2 );
-  mesh2.position.set( 250, 30, 0 );
-  scene.add( mesh2 );
+      const mesh2 = new THREE.Mesh( square, material2 );
+      mesh2.position.set( 250, 30, 0 );
+      scene.add( mesh2 );
 
-  const sound2 = new THREE.PositionalAudio( listener );
-  audioLoader.load( 'assets/bensound-creativeminds.ogg', function ( buffer ) {
+      const sound2 = new THREE.PositionalAudio( listener );
+      audioLoader.load( 'assets/bensound-creativeminds.ogg', function ( buffer ) {
 
-    sound2.setLoop()
-    sound2.setBuffer( buffer );
-    sound2.setRefDistance( 20 );
-    sound2.play();
+        sound2.setLoop()
+        sound2.setBuffer( buffer );
+        sound2.setRefDistance( 20 );
+        sound2.play();
 
-  } );
-  mesh2.add( sound2 );
+      } );
+      mesh2.add( sound2 );
 
-  //
+      //
 
-  const mesh3 = new THREE.Mesh( square, material3 );
-  mesh3.position.set(  0, 30, - 250 );
-  scene.add( mesh3 );
+      const mesh3 = new THREE.Mesh( square, material3 );
+      mesh3.position.set(  0, 30, - 250 );
+      scene.add( mesh3 );
 
-  const sound3 = new THREE.PositionalAudio( listener );
-  audioLoader.load( 'assets/bensound-ukulele.ogg', function ( buffer ) {
+      const sound3 = new THREE.PositionalAudio( listener );
+      audioLoader.load( 'assets/bensound-ukulele.ogg', function ( buffer ) {
 
-    sound3.setLoop();
-    sound3.setBuffer( buffer );
-    sound3.setRefDistance( 20 );
-    sound3.play();
+        sound3.setLoop();
+        sound3.setBuffer( buffer );
+        sound3.setRefDistance( 20 );
+        sound3.play();
 
-  } );
-  mesh3.add( sound3 );  
+      } );
+      mesh3.add( sound3 );  
 
-  // analysers
+      // analysers
 
-  const analyser1 = new THREE.AudioAnalyser( sound1, 32 );
-  const analyser2 = new THREE.AudioAnalyser( sound2, 32 );
-  const analyser3 = new THREE.AudioAnalyser( sound3, 32 );
+      const analyser1 = new THREE.AudioAnalyser( sound1, 32 );
+      const analyser2 = new THREE.AudioAnalyser( sound2, 32 );
+      const analyser3 = new THREE.AudioAnalyser( sound3, 32 );
 
+}
   
+  audioElems();
+
+  // bring in particles
+  group = new THREE.Group();
+  scene.add( group );
+
+  const segments = maxParticleCount * maxParticleCount;
+
+  positions = new Float32Array( segments * 3 );
+  colors = new Float32Array( segments * 3 );
+
+  const pMaterial = new THREE.PointsMaterial( {
+			color: 0xFFFFFF,
+			size: 4,
+			blending: THREE.AdditiveBlending,
+			transparent: true,
+			sizeAttenuation: false
+		} );
+
+		particles = new THREE.BufferGeometry();
+		particlePositions = new Float32Array( maxParticleCount * 3 );
+
+		for ( let i = 0; i < maxParticleCount; i ++ ) {
+
+			const x = Math.random() * r - r / 2;
+			const y = Math.random() * r - r / 2;
+			const z = Math.random() * r - r / 2;
+
+			particlePositions[ i * 3 ] = x;
+			particlePositions[ i * 3 + 1 ] = y;
+			particlePositions[ i * 3 + 2 ] = z;
+
+			
+
+			// add it to the geometry
+			particlesData.push( {
+				velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 1, - 1 + Math.random() * 2 ),
+				numConnections: 0
+			} );
+		}
+
+
+		particles.setDrawRange( 0, particleCount );
+		particles.setAttribute( 'position', new THREE.BufferAttribute( particlePositions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+		
+
+		// create the particle system
+		pointCloud = new THREE.Points( particles, pMaterial );
+		group.add( pointCloud );
+
+		const geometry = new THREE.BufferGeometry();
+
+		geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+		geometry.setAttribute( 'color', new THREE.BufferAttribute( colors, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+
+		geometry.computeBoundingSphere();
+
+		geometry.setDrawRange( 0, 0 );
+
+
+		const material = new THREE.LineBasicMaterial( {
+			vertexColors: true,
+			blending: THREE.AdditiveBlending,
+			transparent: true
+		} );
+
+		linesMesh = new THREE.LineSegments( geometry, material );
+    group.add( linesMesh );
+    
+
+
+
+
+
 
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
