@@ -10,6 +10,32 @@
 </head>
 <body>
 
+    <div id="overlay" class="container-fluid">
+      <div class="row">
+          <div class="col-12 d-flex align-items-center justify-content-center">
+              <div>
+                  <h1>Opiyo Okach Project</h1>
+                  <h4>Instructions for computer</h4>
+                  <p>Use your mouse to engage with the project</p>
+                  <ul>
+                      <li>click and drag with the mouse to orbit around the network</li>
+                      <li>zoom in and out to move</li>
+                      <li>click on the words to open the different chapters of the project</li>
+                  </ul>
+                  <h4>Instructions for touch screen</h4>
+                  <ul>
+                      <li>tag and drag to orbit around the network</li>
+                      <li>pinch to zoom in and out</li>
+                      <li>tap on words to open different chapters of the project</li>
+                  </ul>
+              </div>
+          </div>
+          <div class="col-12 text-center my-5">
+              <button id="startButton" class="btn btn-light btn-lg">Play</button>
+          </div>
+      </div>
+  </div>
+
     <div class="three-js-container">
       <canvas id="c"></canvas>
         <div class="labels">
@@ -28,7 +54,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('brougt in sound spheres');
+console.log('brought in start button');
 
 function main() {
 
@@ -209,7 +235,14 @@ function main() {
   requestAnimationFrame(render);
 }
 
-main();
+const beginBtn = document.querySelector('#startButton');
+const overlay = document.querySelector('#overlay');
+
+
+beginBtn.addEventListener('click', () => {
+  overlay.style.display = 'none';
+  main();
+})
 
     </script>
 
