@@ -37,6 +37,7 @@
     </div>
 
     <div class="three-js-container">
+      <canvas id="c"></canvas>
         <div class="labels">
         </div>
     </div>
@@ -79,54 +80,46 @@ const main = () => {
 		var overlay = document.getElementById( 'overlay' );
 		overlay.remove();
 
-		// bring in camera
-		camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 10000 );
-		camera.position.set( 0, 25, 200 );
+		// baisc setup
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({canvas});
+    const fov = 75;
+    const aspect = 2;
+    const near = 0.1;
+    const far = 5;
+    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+    camera.position.z = 2;
 
-		// scene
-		scene = new THREE.Scene();
+    const scene = new THREE.Scene();
 
-		// light
-		light = new THREE.DirectionalLight( 0xffffff );
-		light.position.set( 0, 0.5, 1 ).normalize();
-		scene.add( light );
-		
+    // add light
+    {
+        const color = 0xFFFFFF;
+        const intensity = 1;
+        const light = new THREE.DirectionalLight(color, intensity);
+        light.position.set(-1,2,4);
+        scene.add(light);
+    }
 
-		// sound spheres
+    renderer.render(scene, camera);
 
+// create a loop to render animation
+const render = (time) => {
+    time *= 0.001; //convert time to seconds
 
+    cubes.forEach((cube, index) => {
+        const speed = 1 + index * .1;
+        const rot = time * speed;
+        cube.rotation.x = rot;
+        cube.rotation.y = rot;
+    })
 
-		
+    renderer.render(scene, camera);
 
-		//
-
-		// create canvas
-    const container = document.querySelector('.three-js-container');
-    
-		renderer = new THREE.WebGLRenderer( { antialias: true } );
-		renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    container.appendChild( renderer.domElement );
-		
-
-		//
-
-		// add controls
-		controls = new OrbitControls( camera, renderer.domElement );
-		controls.target.set(0, 5, 0);
-
-		//
-    
-    renderer.render( scene, camera );
-
-		const render = () => {
-				renderer.render(scene, camera);
-        requestAnimationFrame(render);
-        
-        
-      }
-      requestAnimationFrame(render);
-		}
+    requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+  }
 
     
   
