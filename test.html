@@ -43,7 +43,7 @@
     </div>
     
     <audio loop id="music" preload="auto" style="display: none">
-      <source src="assets/bensound-anewbeginning.ogg" type="audio/ogg">
+      <source src="assets/bensound-ukulele.mp3" type="audio/mp3">
     </audio>
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
@@ -56,8 +56,9 @@
 import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/build/three.module.js';
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
+import { PositionalAudioHelper } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/helpers/PositionalAudioHelper.js';
 
-console.log('changed sound 1 - directional cone');
+console.log('changed sound 1 - to mp3');
 
 const makeInstance = (scene, geometry, x, y, z) => {
 	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
@@ -147,6 +148,11 @@ function main() {
       sound1.setLoop()
       sound1.setRefDistance( 20 );
       sound1.setDirectionalCone( 180, 230, 0.1 );
+      
+
+      var helper = new PositionalAudioHelper( sound1, 0.1 );
+      sound1.add( helper );
+      
       mesh1.add( sound1 );
 
       //
