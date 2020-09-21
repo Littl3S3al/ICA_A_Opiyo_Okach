@@ -1,6 +1,7 @@
 import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/build/three.module.js';
 // import { GUI } from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 import { OrbitControls } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
+console.log('changed light');
 
 let open = false;
 
@@ -51,9 +52,16 @@ const main = () => {
 		scene.fog = new THREE.FogExp2( 0x000000, 0.0025 );
 
 		// light
-		light = new THREE.DirectionalLight( 0xffffff );
-		light.position.set( 0, 0.5, 1 ).normalize();
-		scene.add( light );
+		// add light
+		{
+			const color = 0xFFFFFF;
+			const intensity = 1;
+			const light = new THREE.DirectionalLight(color, intensity);
+			light.position.set(0, 0.5, 1);
+			light.target.position.set(0, 0, 0);
+			scene.add(light);
+			scene.add(light.target);
+		  }
 
 		cubes = [
 			makeInstance(geometryBox, 0, 0, 0), 
