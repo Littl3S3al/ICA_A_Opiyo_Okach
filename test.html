@@ -38,9 +38,12 @@
 
     <div class="three-js-container">
       <canvas id="c"></canvas>
-        <div class="labels">
-        </div>
     </div>
+
+    <div class="popupWindow">
+      <h1>test</h1>
+      <button id="close" class="btn btn-light btn-lg">close</button>
+  </div>
     
     <audio loop id="music" preload="auto" style="display: none">
       <source src="assets/bensound-ukulele.mp3" type="audio/mp3">
@@ -58,7 +61,7 @@ import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/t
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 import { PositionalAudioHelper } from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/helpers/PositionalAudioHelper.js';
 
-console.log('brought in words');
+console.log('brought in raycaster');
 
 const makeInstance = (scene, geometry, x, y, z) => {
 	const material = new THREE.MeshPhongMaterial({color: 0x00ff00});
@@ -79,7 +82,12 @@ const boxHeight = 10;
 const boxDepth = 1;
 const geometryBox = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
+// interaction variables
+let orbiting = false;
+let viewing = true;
+
 function main() {
+
 
   // camera and canvas
   const canvas = document.querySelector('#c');
@@ -119,9 +127,8 @@ function main() {
   }
 
 // bring in audio
-  const audioElems = () => {
-    // bring in audio listener
-      const listener = new THREE.AudioListener();
+// bring in audio listener
+const listener = new THREE.AudioListener();
       camera.add( listener );
 
       // sound spheres
@@ -190,10 +197,6 @@ function main() {
       const analyser1 = new THREE.AudioAnalyser( sound1, 32 );
       const analyser2 = new THREE.AudioAnalyser( sound2, 32 );
       const analyser3 = new THREE.AudioAnalyser( sound3, 32 );
-
-}
-  
-  audioElems();
 
 // particle related variables
   let particlesData = [];
@@ -453,6 +456,102 @@ addInteractives();
 		}
 
 
+
+// raycasting
+class PickHelper {
+		constructor() {
+		this.raycaster = new THREE.Raycaster();
+		this.pickedObject = null;
+		this.pickedObjectSavedColor = 0;
+		}
+		pick(normalizedPosition, scene, camera) {
+		// restore the color if there is a picked object
+		if (this.pickedObject) {
+			this.pickedObject = undefined;
+		}
+
+		// cast a ray through the frustum
+		this.raycaster.setFromCamera(normalizedPosition, camera);
+		// get the list of objects the ray intersected
+		const intersectedObjects = this.raycaster.intersectObjects(scene.children);
+		if (intersectedObjects.length) {
+			// pick the first object. It's the closest one
+			this.pickedObject = intersectedObjects[0].object;
+		}
+		}
+  }
+  
+  const pickPosition = {x: 0, y: 0};
+	const pickHelper = new PickHelper();
+	clearPickPosition();
+
+
+
+  function getCanvasRelativePosition(event) {
+		const rect = canvas.getBoundingClientRect();
+		return {
+		x: (event.clientX - rect.left) * canvas.width  / rect.width,
+		y: (event.clientY - rect.top ) * canvas.height / rect.height,
+		};
+	}
+
+	function setPickPosition(event) {
+		const pos = getCanvasRelativePosition(event);
+		pickPosition.x = (pos.x /  canvas.width ) *  2 - 1;
+    pickPosition.y = (pos.y / canvas.height) * -2 + 1;  // note we flip Y
+	}
+
+	
+	  controls.addEventListener('change', () => {
+
+    orbiting = true;
+
+	  });
+
+	function clearPickPosition() {
+		// unlike the mouse which always has a position
+		// if the user stops touching the screen we want
+		// to stop picking. For now we just pick a value
+		// unlikely to pick something
+		pickPosition.x = -100000;
+		pickPosition.y = -100000;
+  }
+  
+
+	window.addEventListener('mousedown', setPickPosition);
+	window.addEventListener('mouseout', clearPickPosition);
+  window.addEventListener('mouseleave', clearPickPosition);
+  window.addEventListener('mouseup', () => {
+		setTimeout(() => {
+			if(!viewing){
+				orbiting = false;
+			}
+		}, 1000);
+	})
+
+
+	window.addEventListener('touchstart', (event) => {
+		// prevent the window from scrolling
+		event.preventDefault();
+		setPickPosition(event.touches[0]);
+	}, {passive: false});
+
+	window.addEventListener('touchmove', (event) => {
+		setPickPosition(event.touches[0]);
+	});
+
+	window.addEventListener('touchend', () => {
+    clearPickPosition();
+    setTimeout(() => {
+			if(!viewing){
+				orbiting = false;
+			}
+		}, 1000);
+	})
+
+
+
+
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
     const width = canvas.clientWidth;
@@ -476,6 +575,22 @@ addInteractives();
 
     requestAnimationFrame(render);
     requestAnimationFrame(animateBuffer);
+    pickHelper.pick(pickPosition, scene, camera);
+
+    
+    if(pickHelper.pickedObject && !orbiting  && !viewing){
+					popup(pickHelper.pickedObject.name);
+					sound1.setVolume(0);
+					sound2.setVolume(0);
+					sound3.setVolume(0);
+				}
+				if(!viewing){
+					sound1.setVolume(1);
+					sound2.setVolume(1);
+					sound3.setVolume(1);
+				}
+
+
   }
 
   requestAnimationFrame(render);
@@ -488,6 +603,33 @@ const overlay = document.querySelector('#overlay');
 beginBtn.addEventListener('click', () => {
   overlay.style.display = 'none';
   main();
+  setTimeout(() => {
+		viewing = false;
+	}, 1000);
+});
+
+
+const popUpWindow = document.querySelector('.popupWindow');
+const closeBtn = document.querySelector('#close');
+
+const popup = (name) => {
+  // console.log(name);
+  if(name.length > 0){
+		popUpWindow.classList.add('appear');	
+		popUpWindow.querySelector('h1').innerHTML = name;
+		viewing = true;
+	}
+}
+
+closeBtn.addEventListener('click', () => {
+	popUpWindow.classList.remove('appear');
+	viewing = false;
+	
+});
+closeBtn.addEventListener('touchstart', () => {
+
+	popUpWindow.classList.remove('appear');
+	viewing = false;
 })
 
     </script>
