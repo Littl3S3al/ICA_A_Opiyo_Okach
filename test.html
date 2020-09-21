@@ -46,7 +46,7 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-    <script src="globals.js"></script>
+    <!-- <script src="globals.js"></script> -->
 
     <script type="module">
 
@@ -54,7 +54,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('changed group name');
+console.log('particles step 2');
 
 function main() {
 
@@ -171,7 +171,36 @@ function main() {
   
   audioElems();
 
-  const testGroup = new THREE.Group();
+
+
+
+  let particlesData = [];
+  let positions, colors;
+  let particles;
+  let pointCloud;
+  let particlePositions;
+  let linesMesh;
+
+  const maxParticleCount = 100;
+  const particleCount = 50;
+  const r = 200;
+  const rHalf = r / 2;
+
+  const cloudGroup = new THREE.Group();
+  scene.add( cloudGroup );
+
+  const segments = maxParticleCount * maxParticleCount;
+
+  positions = new Float32Array( segments * 3 );
+  colors = new Float32Array( segments * 3 );
+
+  var pMaterial = new THREE.PointsMaterial( {
+      color: 0xFFFFFF,
+      size: 4,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      sizeAttenuation: false
+  } );
     
 
 
