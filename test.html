@@ -54,7 +54,7 @@ import * as THREE from 'https://threejsfundamentals.org/threejs/resources/threej
 import {OrbitControls} from 'https://threejsfundamentals.org/threejs/resources/threejs/r119/examples/jsm/controls/OrbitControls.js';
 // import {GUI} from 'https://threejsfundamentals.org/threejs/../3rdparty/dat.gui.module.js';
 
-console.log('particles step 2');
+console.log('particles step 3');
 
 function main() {
 
@@ -186,6 +186,15 @@ function main() {
   const r = 200;
   const rHalf = r / 2;
 
+  let effectController = {
+      showDots: true,
+      showLines: true,
+      minDistance: 150,
+      limitConnections: false,
+      maxConnections: 20,
+      particleCount: 500
+  };
+
   const cloudGroup = new THREE.Group();
   scene.add( cloudGroup );
 
@@ -201,6 +210,56 @@ function main() {
       transparent: true,
       sizeAttenuation: false
   } );
+
+  particles = new THREE.BufferGeometry();
+  particlePositions = new Float32Array( maxParticleCount * 3 );
+
+		for ( var i = 0; i < maxParticleCount; i ++ ) {
+
+			var x = Math.random() * r - r / 2;
+			var y = Math.random() * r - r / 2;
+			var z = Math.random() * r - r / 2;
+
+			particlePositions[ i * 3 ] = x;
+			particlePositions[ i * 3 + 1 ] = y;
+			particlePositions[ i * 3 + 2 ] = z;
+
+			
+
+			// add it to the geometry
+			particlesData.push( {
+				velocity: new THREE.Vector3( - 1 + Math.random() * 2, - 1 + Math.random() * 1, - 1 + Math.random() * 2 ),
+				numConnections: 0
+			} );
+		}
+
+
+		particles.setDrawRange( 0, particleCount );
+		particles.setAttribute( 'position', new THREE.BufferAttribute( particlePositions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+		
+
+		// create the particle system
+		pointCloud = new THREE.Points( particles, pMaterial );
+		cloudGroup.add( pointCloud );
+
+		var geometry = new THREE.BufferGeometry();
+
+		geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+		geometry.setAttribute( 'color', new THREE.BufferAttribute( colors, 3 ).setUsage( THREE.DynamicDrawUsage ) );
+
+		geometry.computeBoundingSphere();
+
+		geometry.setDrawRange( 0, 0 );
+
+
+		var material = new THREE.LineBasicMaterial( {
+			vertexColors: true,
+			blending: THREE.AdditiveBlending,
+			transparent: true
+		} );
+
+		linesMesh = new THREE.LineSegments( geometry, material );
+		cloudGroup.add( linesMesh );
     
 
 
